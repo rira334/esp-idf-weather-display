@@ -1,0 +1,5 @@
+# Computer-side test tools; not firmware dependencies.
+pytest>=7,<9
+pytest-embedded>=2,<3
+pytest-embedded-serial-esp>=2,<3
+pytest-embedded-idf>=2,<3
