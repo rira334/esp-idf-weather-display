@@ -2,7 +2,7 @@
 
 This ESP-IDF project connects an ESP32 to Wi-Fi, fetches current weather for the configured coordinates, and shows temperature and relative humidity on a 16×2 LCD with a PCF8574 I2C backpack.
 
-Weather comes from an HTTPS request to Open-Meteo, rather than a local sensor. The application fetches it **once at startup** and leaves those values on screen until the board restarts. It does not currently refresh the weather periodically.
+Weather comes from an HTTPS request to Open-Meteo, rather than a local sensor. The application fetches it every one minute.
 
 ## Startup flow
 
