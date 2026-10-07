@@ -9,7 +9,6 @@ import ipaddress
 import pytest
 from pytest_embedded_idf.dut import IdfDut
 
-
 @pytest.mark.hardware
 def test_lcd_initialization(dut: IdfDut) -> None:
     """A quick wiring check that does not need working Wi-Fi or internet."""
@@ -21,7 +20,6 @@ def test_lcd_initialization(dut: IdfDut) -> None:
     # Discovery alone only proves an I2C device acknowledged its address.
     # This message is emitted after the LCD initialization commands finish.
     dut.expect_exact("main: LCD initialized", timeout=5)
-
 
 @pytest.mark.hardware
 @pytest.mark.network

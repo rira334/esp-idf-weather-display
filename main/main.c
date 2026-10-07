@@ -53,6 +53,7 @@ void app_main(void)
         LONGITUDE,
         json,
         sizeof(json));
+
     if (err != ESP_OK)
     {
       lcd1602_clear();
@@ -63,6 +64,7 @@ void app_main(void)
     err = weather_parser_parse(
         json,
         &weather);
+
     if (err != ESP_OK)
     {
       lcd1602_clear();

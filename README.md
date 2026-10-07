@@ -37,6 +37,21 @@ The driver uses I2C controller 0 at 100 kHz. It probes address `0x27` first, the
 
 Each command or character is sent as two nibbles in 4-bit mode. Data settles before Enable is raised, and the driver waits after each transfer. Clear and home commands wait 3 ms using a microsecond delay, so the wait cannot round down to zero at the configured FreeRTOS tick rate.
 
+#### How the LCD interface works
+
+The LCD1602 is a 16-column by 2-row character display. Its controller (commonly HD44780-compatible) receives commands and character bytes from the microcontroller:
+
+- **RS (Register Select)** selects what the byte means: `0` for a command (such as clearing the display or positioning the cursor), `1` for character data (such as the byte representing `A`).
+- **RW (Read/Write)** selects transfer direction: `0` writes to the LCD, `1` reads from it. This driver only writes; many backpacks tie RW low.
+- **EN (Enable)** is pulsed to tell the LCD to latch the data currently on its data pins.
+- **Backlight** powers the light behind the characters. It is independent of the text/control signals and is switched through the backpack; it does not itself send data to the display.
+
+The controller works with 8-bit bytes, but this driver uses 4-bit mode to save four connections. A byte is split into two 4-bit **nibbles** and sent high nibble first, then low nibble, with an Enable pulse for each. For example, `A` is `0x41` (`0100 0001`), so the LCD receives `0100` followed by `0001` and combines them into the original byte. Both commands and character data are sent this way; RS tells the controller how to interpret the completed byte.
+
+Commands are bytes whose bit patterns request controller operations. Common examples are `0x01` (clear display), `0x02` (return cursor home), `0x0C` (display on, cursor hidden), `0x06` (advance cursor after writing), and `0x80` (set cursor to the start of the first row). The controller needs time to execute some commands, especially clear and home, so the driver waits after transfers.
+
+The driver's `lcd_hw_init()` function in `components/lcd1602/lcd1602.c` performs the power-on setup. It first turns on the backlight and waits 100 ms for the LCD to power up. It then sends the `0x3` nibble three times, with delays, to bring the controller into a known state even if it initially expects 8-bit transfers. It sends `0x2` next to select 4-bit mode. These are individual nibbles, not complete bytes. Once the controller is in 4-bit mode, the function sends full command bytes (each encoded as two nibbles): `0x28` selects 4-bit, two-line operation; `0x08` keeps the display off during setup; `0x01` clears it; `0x06` sets the cursor to advance after each character; and `0x0C` turns the display on with the cursor hidden. The waits give the controller time to power up and execute its commands, particularly the slower clear command.
+
 Cursor positions are zero-based: columns 0–15 and rows 0–1. Printing advances the cursor without clipping text or handling row wrapping. Initialize the driver once and call it from one task; it has no locking for concurrent writers.
 
 ### Wi-Fi manager
